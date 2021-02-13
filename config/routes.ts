@@ -18,29 +18,32 @@
  {
     path: '/list',
     name: 'list',
-    icon: 'crown',
+    icon: 'smile',
     // access: 'canAdmin',
     // component: './Admin',
     routes: [
       {
         path: '/list/user',
         name: 'user-list',
-        icon: 'smile',
-        component: './TableList',
+        component: './UserList',
       },
       {
         path: '/list/auth',
         name: 'auth-list',
-        icon: 'smile',
-        component: './TableList',
+        component: './AuthList',
       },
       {
         path: '/list/role',
         name: 'role-list',
-        icon: 'smile',
-        component: './TableList',
+        component: './RoleList',
       },
     ],
+  },
+  {
+    path: '/test',
+    name: 'test',
+    icon: 'smile',
+    component: './TableList',
   },
   {
     path: '/',

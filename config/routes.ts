@@ -18,7 +18,7 @@
  {
     path: '/list',
     name: 'list',
-    icon: 'smile',
+    icon: 'setting',
     // access: 'canAdmin',
     // component: './Admin',
     routes: [

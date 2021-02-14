@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
 import type { ProColumns, ActionType } from '@ant-design/pro-table';
-import { Button } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Button, Modal } from 'antd';
+import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import ProTable from '@ant-design/pro-table';
 // import { rule, addRule } from '@/services/ant-design-pro/rule';
 import { userList } from '@/services/user/list';
@@ -14,8 +14,8 @@ import styles from './index.less';
  *
  * @param fields
  */
-const handleAdd = async (/* fields: any */) => {
-  /* const hide = message.loading('正在添加');
+/* const handleAdd = async (fields: any ) => {
+   const hide = message.loading('正在添加');
   try {
     await addRule({ ...fields });
     hide();
@@ -25,8 +25,9 @@ const handleAdd = async (/* fields: any */) => {
     hide();
     message.error('添加失败请重试！');
     return false;
-  } */
+  }
 };
+*/
 
 const UserList: React.FC = () => {
   const actionRef = useRef<ActionType>();
@@ -109,8 +110,16 @@ const UserList: React.FC = () => {
         <a
           key="config"
           onClick={() => {
-            handleModalVisible(true);
+            // handleModalVisible(true);
             // setCurrentRow(record);
+            Modal.confirm({
+              title: '确认',
+              icon: <ExclamationCircleOutlined />,
+              content: '确认删除这条用户信息吗？',
+              okText: '确认',
+              cancelText: '取消',
+              onOk: () => {},
+            });
           }}
         >
           删除
@@ -169,15 +178,47 @@ const UserList: React.FC = () => {
           width="400px"
           visible={modalVisible}
           onVisibleChange={handleModalVisible}
-          onFinish={async (value) => {
-            const success = await handleAdd(value);
+          onFinish={
+            async (/* value */) => {
+              /* const success = await handleAdd(value);
             if (success) {
               handleModalVisible(false);
               if (actionRef.current) {
                 actionRef.current.reload();
               }
+            } */
             }
-          }}
+          }
+        >
+          <ProFormText
+            rules={[
+              {
+                required: true,
+                message: '规则名称为必填项',
+              },
+            ]}
+            width="md"
+            name="name"
+          />
+          <ProFormTextArea width="md" name="desc" />
+        </ModalForm>
+
+        <ModalForm
+          title="修改密码"
+          width="400px"
+          visible={modalVisible}
+          onVisibleChange={handleModalVisible}
+          onFinish={
+            async (/* value */) => {
+              /* const success = await handleAdd(value);
+            if (success) {
+              handleModalVisible(false);
+              if (actionRef.current) {
+                actionRef.current.reload();
+              }
+            } */
+            }
+          }
         >
           <ProFormText
             rules={[

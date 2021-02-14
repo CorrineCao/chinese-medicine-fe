@@ -132,7 +132,7 @@ const authHeaderInterceptor = (url: string, options: RequestOptionsInit) => {
   };
 };
 
-const demoResponseInterceptors = (response: Response/* , options: RequestOptionsInit */) => {
+const demoResponseInterceptors = (response: Response /* , options: RequestOptionsInit */) => {
   if (response.status === 401) {
     localStorage.removeItem(tokenName);
     window.location.href = '/user/login';

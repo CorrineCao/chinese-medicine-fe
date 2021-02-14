@@ -40,12 +40,6 @@
     ],
   },
   {
-    path: '/test',
-    name: 'test',
-    icon: 'smile',
-    component: './TableList',
-  },
-  {
     path: '/',
     redirect: '/list/user',
   },

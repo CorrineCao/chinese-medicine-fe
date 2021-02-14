@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import ProForm, { ProFormText } from '@ant-design/pro-form';
 import { useIntl, Link, history, FormattedMessage, SelectLang, useModel } from 'umi';
 import Footer from '@/components/Footer';
-import { login } from '@/services/ant-design-pro/login';
+import { login } from '@/services/user/login';
 import styles from './index.less';
+import { tokenName } from '@/utils/utils';
 
 const LoginMessage: React.FC<{
   content: string;
@@ -37,7 +38,7 @@ const Login: React.FC = () => {
 
   const intl = useIntl();
 
-  const fetchUserInfo = async () => {
+  /* const fetchUserInfo = async () => {
     const userInfo = await initialState?.fetchUserInfo?.();
     if (userInfo) {
       setInitialState({
@@ -45,27 +46,37 @@ const Login: React.FC = () => {
         currentUser: userInfo,
       });
     }
+  }; */
+
+  const setToken = (token: string) => {
+    setInitialState({
+      ...initialState,
+      token,
+    });
   };
 
   const handleSubmit = async (values: API.LoginParams) => {
     setSubmitting(true);
     try {
       // 登录
-      const msg = await login({ ...values, type: 'account' });
-      if (msg.status === 'ok') {
+      const result = await login({ ...values });
+      if (result.token) {
         message.success('登录成功！');
-        await fetchUserInfo();
+        localStorage.setItem(tokenName, result?.token || '');
+        setToken(result?.token || '');
+        // await fetchUserInfo();
         goto();
         return;
       }
       // 如果失败去设置用户错误信息
-      setUserLoginState(msg);
+      setUserLoginState(result);
     } catch (error) {
-      message.error('登录失败，请重试！');
+      // message.error('登录失败，请重试！');
+      setUserLoginState(error.response);
     }
     setSubmitting(false);
   };
-  const { status, type: loginType } = userLoginState;
+  const { status } = userLoginState;
 
   return (
     <div className={styles.container}>
@@ -106,11 +117,11 @@ const Login: React.FC = () => {
               handleSubmit(values as API.LoginParams);
             }}
           >
-            {status === 'error' && loginType === 'account' && (
+            {status && status !== 'ok' && (
               <LoginMessage
                 content={intl.formatMessage({
                   id: 'pages.login.accountLogin.errorMessage',
-                  defaultMessage: '账户或密码错误（admin/1)',
+                  defaultMessage: '账户或密码错误',
                 })}
               />
             )}
@@ -145,7 +156,7 @@ const Login: React.FC = () => {
                 }}
                 placeholder={intl.formatMessage({
                   id: 'pages.login.password.placeholder',
-                  defaultMessage: '密码: ant.design',
+                  defaultMessage: '密码',
                 })}
                 rules={[
                   {

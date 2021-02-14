@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
 import type { ProColumns, ActionType } from '@ant-design/pro-table';
-import { Button, message } from 'antd';
+import { Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import ProTable from '@ant-design/pro-table';
-import { rule, addRule } from '@/services/ant-design-pro/rule';
+// import { rule, addRule } from '@/services/ant-design-pro/rule';
+import { userList } from '@/services/user/list';
 import { ModalForm, ProFormText, ProFormTextArea } from '@ant-design/pro-form';
 import styles from './index.less';
 
@@ -13,8 +14,8 @@ import styles from './index.less';
  *
  * @param fields
  */
-const handleAdd = async (fields: API.RuleListItem) => {
-  const hide = message.loading('正在添加');
+const handleAdd = async (/* fields: any */) => {
+  /* const hide = message.loading('正在添加');
   try {
     await addRule({ ...fields });
     hide();
@@ -24,7 +25,7 @@ const handleAdd = async (fields: API.RuleListItem) => {
     hide();
     message.error('添加失败请重试！');
     return false;
-  }
+  } */
 };
 
 const UserList: React.FC = () => {
@@ -33,44 +34,68 @@ const UserList: React.FC = () => {
   /** 弹窗 */
   const [modalVisible, handleModalVisible] = useState<boolean>(false);
 
-  const columns: ProColumns<API.RuleListItem>[] = [
+  const columns: ProColumns<any>[] = [
     {
-      title: '规则名称',
-      dataIndex: 'name',
+      title: 'ID',
+      dataIndex: 'id',
       // search: false
     },
     {
-      title: '描述',
-      dataIndex: 'desc',
-      valueType: 'textarea',
+      title: '用户名',
+      dataIndex: 'userName',
+      // valueType: 'textarea',
     },
     {
-      title: '状态',
-      dataIndex: 'status',
+      title: '密码',
+      dataIndex: 'password',
+      // valueType: 'textarea',
+    },
+    {
+      title: '姓名',
+      dataIndex: 'name',
+      // valueType: 'textarea',
+    },
+    {
+      title: '邮箱',
+      dataIndex: 'email',
+    },
+    {
+      title: '用户类型',
+      dataIndex: 'type',
       hideInForm: true,
       valueEnum: {
         0: {
-          text: '关闭',
+          text: '微信用户',
           status: 'Default',
         },
         1: {
-          text: '运行中',
-          status: 'Processing',
-        },
-        2: {
-          text: '已上线',
-          status: 'Success',
-        },
-        3: {
-          text: '异常',
-          status: 'Error',
+          text: '后台用户',
+          status: 'Default',
         },
       },
+    },
+    {
+      title: '性别',
+      dataIndex: 'sex',
+    },
+    {
+      title: '手机号',
+      dataIndex: 'phone',
+    },
+    {
+      title: '角色',
+      dataIndex: 'role',
+    },
+    {
+      title: '状态',
+      dataIndex: 'state',
     },
     {
       title: '操作',
       dataIndex: 'option',
       valueType: 'option',
+      fixed: 'right',
+      width: 160,
       render: () => [
         <a
           key="config"
@@ -79,7 +104,7 @@ const UserList: React.FC = () => {
             // setCurrentRow(record);
           }}
         >
-          编辑
+          修改密码
         </a>,
         <a
           key="config"
@@ -89,19 +114,19 @@ const UserList: React.FC = () => {
           }}
         >
           删除
-        </a>
+        </a>,
       ],
     },
   ];
 
-
   return (
     <div className={styles.container}>
       <PageContainer>
-        <ProTable<API.RuleListItem, API.PageParams>
+        <ProTable<any, API.PageParams>
+          options={false}
           headerTitle="查询结果"
           actionRef={actionRef}
-          rowKey="key"
+          rowKey="id"
           search={{
             labelWidth: 120,
           }}
@@ -116,38 +141,57 @@ const UserList: React.FC = () => {
               <PlusOutlined /> 新建
             </Button>,
           ]}
-          request={rule}
+          request={async (params) => {
+            const { current, pageSize, keyword, ...otherParams } = params;
+            const newParams = {
+              pageSize,
+              pageNum: current,
+              keyword,
+              ...otherParams,
+              // type: userType
+            };
+            const result = await userList(newParams);
+            return {
+              data: result.list,
+              // success 请返回 true，
+              // 不然 table 会停止解析数据，即使有数据
+              success: true,
+              // 不传会使用 data 的长度，如果是分页一定要传
+              total: result.total,
+            };
+          }}
           columns={columns}
+          scroll={{ x: 1400 }}
         />
 
         <ModalForm
-        title="新建用户"
-        width="400px"
-        visible={modalVisible}
-        onVisibleChange={handleModalVisible}
-        onFinish={async (value) => {
-          const success = await handleAdd(value as API.RuleListItem);
-          if (success) {
-            handleModalVisible(false);
-            if (actionRef.current) {
-              actionRef.current.reload();
+          title="新建用户"
+          width="400px"
+          visible={modalVisible}
+          onVisibleChange={handleModalVisible}
+          onFinish={async (value) => {
+            const success = await handleAdd(value);
+            if (success) {
+              handleModalVisible(false);
+              if (actionRef.current) {
+                actionRef.current.reload();
+              }
             }
-          }
-        }}
-      >
-        <ProFormText
-          rules={[
-            {
-              required: true,
-              message: "规则名称为必填项"
-            },
-          ]}
-          width="md"
-          name="name"
-        />
-        <ProFormTextArea width="md" name="desc" />
-      </ModalForm>
-    </PageContainer>
+          }}
+        >
+          <ProFormText
+            rules={[
+              {
+                required: true,
+                message: '规则名称为必填项',
+              },
+            ]}
+            width="md"
+            name="name"
+          />
+          <ProFormTextArea width="md" name="desc" />
+        </ModalForm>
+      </PageContainer>
     </div>
   );
 };

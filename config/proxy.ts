@@ -5,24 +5,25 @@
  * For details, please see
  * https://pro.ant.design/docs/deploy
  */
+const targetPrefix = 'http://120.27.238.159:8081/';
 export default {
   dev: {
     '/api/': {
-      target: 'https://preview.pro.ant.design',
+      target: targetPrefix,
       changeOrigin: true,
-      pathRewrite: { '^': '' },
+      pathRewrite: { '^/api': '' },
     },
   },
   test: {
     '/api/': {
-      target: 'https://preview.pro.ant.design',
+      target: targetPrefix,
       changeOrigin: true,
       pathRewrite: { '^': '' },
     },
   },
   pre: {
     '/api/': {
-      target: 'your pre url',
+      target: targetPrefix,
       changeOrigin: true,
       pathRewrite: { '^': '' },
     },

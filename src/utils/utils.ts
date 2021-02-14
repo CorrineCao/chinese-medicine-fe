@@ -18,3 +18,6 @@ export const isAntDesignProOrDev = (): boolean => {
   }
   return isAntDesignPro();
 };
+
+export const tokenName: string = 'chinese-medicine-token';
+export const userType: number = 1;

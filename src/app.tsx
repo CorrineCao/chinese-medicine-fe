@@ -7,7 +7,8 @@ import { history } from 'umi';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import type { ResponseError } from 'umi-request';
-import { currentUser as queryCurrentUser } from './services/ant-design-pro/api';
+// import { currentUser as queryCurrentUser } from './services/ant-design-pro/api';
+import { tokenName } from './utils/utils';
 
 // const isDev = process.env.NODE_ENV === 'development';
 
@@ -21,10 +22,11 @@ export const initialStateConfig = {
  * */
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
-  currentUser?: API.CurrentUser;
-  fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
+  // currentUser?: API.CurrentUser;
+  token?: string;
+  // fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
 }> {
-  const fetchUserInfo = async () => {
+  /* const fetchUserInfo = async () => {
     try {
       const currentUser = await queryCurrentUser();
       return currentUser;
@@ -32,18 +34,22 @@ export async function getInitialState(): Promise<{
       history.push('/user/login');
     }
     return undefined;
-  };
+  }; */
   // 如果是登录页面，不执行
   if (history.location.pathname !== '/user/login') {
-    const currentUser = await fetchUserInfo();
-    return {
-      fetchUserInfo,
-      currentUser,
-      settings: {},
-    };
+    const token = localStorage.getItem(tokenName);
+    if (token) {
+      return {
+        // fetchUserInfo,
+        // currentUser,
+        token,
+        settings: {},
+      };
+    }
+    // const currentUser = await fetchUserInfo();
   }
   return {
-    fetchUserInfo,
+    // fetchUserInfo,
     settings: {},
   };
 }
@@ -57,7 +63,10 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
     onPageChange: () => {
       const { location } = history;
       // 如果没有登录，重定向到 login
-      if (!initialState?.currentUser && location.pathname !== '/user/login') {
+      /* if (!initialState?.currentUser && location.pathname !== '/user/login') {
+        history.push('/user/login');
+      } */
+      if (!initialState?.token && location.pathname !== '/user/login') {
         history.push('/user/login');
       }
     },
@@ -95,10 +104,10 @@ const errorHandler = (error: ResponseError) => {
   const { response } = error;
   if (response && response.status) {
     const errorText = codeMessage[response.status] || response.statusText;
-    const { status, url } = response;
+    const { status } = response;
 
     notification.error({
-      message: `请求错误 ${status}: ${url}`,
+      message: `请求错误 ${status}:`,
       description: errorText,
     });
   }
@@ -112,7 +121,28 @@ const errorHandler = (error: ResponseError) => {
   throw error;
 };
 
+const authHeaderInterceptor = (url: string, options: RequestOptionsInit) => {
+  // const authHeader = { Authorization: 'Bearer xxxxxx' };
+  const { headers } = options;
+  const token = localStorage.getItem(tokenName);
+  const newHeaders = { ...headers, 'X-Token': token };
+  return {
+    url: `${url}`,
+    options: { ...options, interceptors: true, headers: newHeaders },
+  };
+};
+
+const demoResponseInterceptors = (response: Response/* , options: RequestOptionsInit */) => {
+  if (response.status === 401) {
+    localStorage.removeItem(tokenName);
+    window.location.href = '/user/login';
+  }
+  return response;
+};
+
 // https://umijs.org/zh-CN/plugins/plugin-request
 export const request: RequestConfig = {
   errorHandler,
+  requestInterceptors: [authHeaderInterceptor],
+  responseInterceptors: [demoResponseInterceptors],
 };

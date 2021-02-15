@@ -1,33 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
-import { Button, Modal, Select, Row, Col, Form, Table, Input } from 'antd';
+import { Button, Modal, Select, Row, Col, Form, Table, Input, message } from 'antd';
 import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
-import { userList } from '@/services/user/list';
-import { ModalForm, ProFormText, ProFormTextArea } from '@ant-design/pro-form';
+import { userList, addUser, delUser, editUser } from '@/services/user/list';
 import styles from './index.less';
-import { ColumnsType } from 'antd/lib/table/Table';
+import type { ColumnsType } from 'antd/lib/table/Table';
 
-/**
- * 添加节点
- *
- * @param fields
- */
-/* const handleAdd = async (fields: any ) => {
-   const hide = message.loading('正在添加');
-  try {
-    await addRule({ ...fields });
-    hide();
-    message.success('添加成功');
-    return true;
-  } catch (error) {
-    hide();
-    message.error('添加失败请重试！');
-    return false;
-  }
-};
-*/
-
-const pageSize: number = 6;
+const pageSize: number = 10;
 const typeOptions = [
   {
     label: '微信用户',
@@ -40,12 +19,73 @@ const typeOptions = [
 ];
 const AuthList: React.FC = () => {
   const [form] = Form.useForm();
+  const [addForm] = Form.useForm();
   const [pageNum, setPageNum] = useState<number>(1);
   const [total, setTotal] = useState<number>(1);
   const [dataSource, setDataSource] = useState([]);
-  // const [currentRow, setCurrentRow] = useState<API.RuleListItem>();
+  const [current, setCurrent] = useState<any>(null);
   /** 弹窗 */
   const [modalVisible, handleModalVisible] = useState<boolean>(false);
+
+  const searchList = async (params: API.PageApiParams) => {
+    const result = await userList(params);
+    setDataSource(result.list || []);
+    setTotal(result.total);
+  };
+
+  const onFinish = (values: API.PageApiParams) => {
+    setPageNum(1);
+    const params = {
+      ...values,
+      pageSize,
+      pageNum: 1,
+    };
+    searchList(params);
+  };
+
+  const changePage = (pageNo: number) => {
+    const values = form.getFieldsValue();
+    setPageNum(pageNo);
+    const params = {
+      ...values,
+      pageSize,
+      pageNum: pageNo,
+    };
+    searchList(params);
+  };
+
+  useEffect(() => {
+    const params = {
+      pageSize,
+      pageNum: 1,
+    };
+    searchList(params);
+  }, []);
+
+  const submitModal = () => {
+    addForm.validateFields().then(async (values) => {
+      if (values.id) {
+        // 编辑
+        await editUser({
+          ...current,
+          ...values,
+        });
+        changePage(pageNum);
+      } else {
+        await addUser(values);
+        changePage(1);
+      }
+      addForm.resetFields();
+      setCurrent(null);
+      handleModalVisible(false);
+    });
+  };
+
+  const cancelModal = () => {
+    addForm.resetFields();
+    setCurrent(null);
+    handleModalVisible(false);
+  };
 
   const columns: ColumnsType<any> = [
     {
@@ -56,11 +96,6 @@ const AuthList: React.FC = () => {
     {
       title: '用户名',
       dataIndex: 'userName',
-    },
-    {
-      title: '密码',
-      dataIndex: 'password',
-      width: 320,
     },
     {
       title: '姓名',
@@ -100,28 +135,31 @@ const AuthList: React.FC = () => {
       dataIndex: 'option',
       fixed: 'right',
       width: 160,
-      render: () => {
+      render: (text, record) => {
         return (
           <div className={styles.operationList}>
             <a
               onClick={() => {
                 handleModalVisible(true);
-                // setCurrentRow(record);
+                addForm.setFieldsValue(record);
+                setCurrent(record);
               }}
             >
-              修改密码
+              编辑
             </a>
             <a
               onClick={() => {
-                // handleModalVisible(true);
-                // setCurrentRow(record);
                 Modal.confirm({
                   title: '确认',
                   icon: <ExclamationCircleOutlined />,
                   content: '确认删除这条用户信息吗？',
                   okText: '确认',
                   cancelText: '取消',
-                  onOk: () => {},
+                  onOk: async () => {
+                    await delUser({ id: record.id });
+                    changePage(pageNum);
+                    message.info('删除成功', 1);
+                  },
                 });
               }}
             >
@@ -133,47 +171,12 @@ const AuthList: React.FC = () => {
     },
   ];
 
-  const searchList = async (params: API.PageApiParams) => {
-    const result = await userList(params);
-    setDataSource(result.list || []);
-    setTotal(result.total);
-  };
-
-  const onFinish = (values: API.PageApiParams) => {
-    setPageNum(1);
-    const params = {
-      ...values,
-      pageSize,
-      pageNum: 1,
-    };
-    searchList(params);
-  };
-
-  const changePage = (pageNo: number) => {
-    const values = form.getFieldsValue();
-    setPageNum(pageNo);
-    const params = {
-      ...values,
-      pageSize,
-      pageNum: pageNo,
-    };
-    searchList(params);
-  };
-
-  useEffect(() => {
-    const params = {
-      pageSize,
-      pageNum: 1,
-    };
-    searchList(params);
-  }, []);
-
   return (
     <div className={styles.container}>
       <PageContainer>
         <article>
           <section className={styles.rowStyle}>
-            <Form form={form} name="global_state" onFinish={onFinish}>
+            <Form form={form} name="list-form" onFinish={onFinish}>
               <Row>
                 <Col span={8}>
                   <Form.Item name="type" label="用户类型">
@@ -198,7 +201,14 @@ const AuthList: React.FC = () => {
           <section className={styles.rowStyle}>
             <div className={styles.searchResult}>
               <strong>查询结果</strong>
-              <Button type="primary">
+              <Button
+                type="primary"
+                onClick={() => {
+                  addForm.resetFields();
+                  setCurrent(null);
+                  handleModalVisible(true);
+                }}
+              >
                 <PlusOutlined /> 新增
               </Button>
             </div>
@@ -206,72 +216,60 @@ const AuthList: React.FC = () => {
               rowKey="id"
               columns={columns}
               dataSource={dataSource}
-              scroll={{ x: 1600 }}
+              scroll={{ x: 1400 }}
               pagination={{
                 current: pageNum,
                 pageSize,
                 total,
                 onChange: changePage,
+                showTotal: (all) => `共${all}条 `,
               }}
             />
           </section>
         </article>
 
-        <ModalForm
-          title="新建用户"
-          width="400px"
+        <Modal
+          title={`${current?.id ? '编辑' : '新增'}用户`}
+          destroyOnClose
           visible={modalVisible}
-          onVisibleChange={handleModalVisible}
-          onFinish={async () => {
-            /* const success = await handleAdd(value);
-            if (success) {
-              handleModalVisible(false);
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            } */
-          }}
+          onOk={submitModal}
+          onCancel={cancelModal}
         >
-          <ProFormText
-            rules={[
-              {
-                required: true,
-                message: '规则名称为必填项',
-              },
-            ]}
-            width="md"
-            name="name"
-          />
-          <ProFormTextArea width="md" name="desc" />
-        </ModalForm>
-
-        <ModalForm
-          title="修改密码"
-          width="400px"
-          visible={modalVisible}
-          onVisibleChange={handleModalVisible}
-          onFinish={async () => {
-            /* const success = await handleAdd(value);
-            if (success) {
-              handleModalVisible(false);
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            } */
-          }}
-        >
-          <ProFormText
-            rules={[
-              {
-                required: true,
-                message: '规则名称为必填项',
-              },
-            ]}
-            width="md"
-            name="name"
-          />
-          <ProFormTextArea width="md" name="desc" />
-        </ModalForm>
+          <Form form={addForm} name="add-form" initialValues={{}}>
+            {current?.id ? (
+              <Form.Item name="id" label="ID">
+                <Input style={{ width: '90%' }} allowClear disabled />
+              </Form.Item>
+            ) : null}
+            <Form.Item
+              name="userName"
+              label="用户名"
+              rules={[{ required: true, message: '姓名必填' }]}
+            >
+              <Input style={{ width: '90%' }} allowClear />
+            </Form.Item>
+            <Form.Item
+              name="password"
+              label="密码"
+              rules={[{ required: true, message: '密码必填' }]}
+            >
+              <Input type="password" style={{ width: '90%' }} allowClear />
+            </Form.Item>
+            <Form.Item
+              name="nickName"
+              label="昵称"
+              rules={[{ required: true, message: '昵称必填' }]}
+            >
+              <Input style={{ width: '90%' }} allowClear />
+            </Form.Item>
+            <Form.Item name="email" label="邮箱">
+              <Input style={{ width: '90%' }} allowClear />
+            </Form.Item>
+            <Form.Item name="phone" label="手机">
+              <Input style={{ width: '90%' }} allowClear />
+            </Form.Item>
+          </Form>
+        </Modal>
       </PageContainer>
     </div>
   );

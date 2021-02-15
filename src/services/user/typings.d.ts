@@ -38,6 +38,7 @@ declare namespace API {
     pageNum?: number;
     keyword?: string;
     type?: number;
+    sysCode?: string;
   };
 
   type RuleList = {

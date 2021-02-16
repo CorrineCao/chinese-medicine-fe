@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
 import { Button, Modal, Select, Row, Col, Form, Table, Input, message } from 'antd';
 import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
-import { addUser, delUser, editUser } from '@/services/user/list';
-import { roleList } from '@/services/role/list';
-import { getSysCode } from '@/services/common';
-import styles from './index.less';
+import { roleList, addRole, editRole, delRole } from '@/services/role/list';
+import { authList } from '@/services/auth/list';
+import { useModel } from 'umi';
 import type { ColumnsType } from 'antd/lib/table/Table';
+import styles from './index.less';
+import moment from 'moment';
 
 const pageSize: number = 10;
 
@@ -17,12 +18,18 @@ const RoleList: React.FC = () => {
   const [total, setTotal] = useState<number>(1);
   const [dataSource, setDataSource] = useState([]);
   const [current, setCurrent] = useState<any>(null);
-  const [sysCodeOption, setSysCodeOption] = useState<any[]>([]);
+  const [authOptionList, setAuthOptionList] = useState<any[]>([]);
   /** 弹窗 */
   const [modalVisible, handleModalVisible] = useState<boolean>(false);
+  const { initialState } = useModel('@@initialState');
+  const sysCode = initialState?.sysInfo?.split(',')?.[1];
 
   const searchList = async (params: API.PageApiParams) => {
-    const result = await roleList(params);
+    const newParams = {
+      ...params,
+      sysCode,
+    };
+    const result = await roleList(newParams);
     setDataSource(result.list || []);
     setTotal(result.total);
   };
@@ -50,17 +57,13 @@ const RoleList: React.FC = () => {
 
   useEffect(() => {
     const initData = async () => {
-      const sysCodeResult = await getSysCode();
-      const sysCodeOpt = sysCodeResult.map((item: any) => ({
-        label: item.sysName,
-        value: item.sysCode,
-      }));
-      setSysCodeOption(sysCodeOpt);
-      /* const params = {
+      const authResult = await authList({ sysCode, pageNum: 1, pageSize: 20 });
+      setAuthOptionList(authResult.list || []);
+      const params = {
         pageSize,
         pageNum: 1,
       };
-      searchList(params); */
+      searchList(params);
     };
     initData();
   }, []);
@@ -69,13 +72,17 @@ const RoleList: React.FC = () => {
     addForm.validateFields().then(async (values) => {
       if (values.id) {
         // 编辑
-        await editUser({
+        await editRole({
           ...current,
           ...values,
+          sysCode,
         });
         changePage(pageNum);
       } else {
-        await addUser(values);
+        await addRole({
+          ...values,
+          sysCode,
+        });
         changePage(1);
       }
       addForm.resetFields();
@@ -94,57 +101,50 @@ const RoleList: React.FC = () => {
     {
       title: 'ID',
       dataIndex: 'id',
-      width: 160,
     },
     {
-      title: '用户名',
-      dataIndex: 'userName',
-    },
-    {
-      title: '姓名',
+      title: '角色值',
       dataIndex: 'name',
     },
     {
-      title: '邮箱',
-      dataIndex: 'email',
-      width: 140,
+      title: '角色名',
+      dataIndex: 'nameCn',
     },
     {
-      title: '用户类型',
-      dataIndex: 'type',
-      width: 100,
+      title: '权限',
+      dataIndex: 'permission',
+      width: '20%',
+      render: (text) => {
+        return text
+          ? JSON.parse(text)
+              .map((item: any) => `${item.label}(${item.value})`)
+              .join(', ')
+          : null;
+      },
     },
     {
-      title: '性别',
-      dataIndex: 'sex',
-      width: 100,
+      title: '描述',
+      dataIndex: 'desc',
     },
     {
-      title: '手机号',
-      dataIndex: 'phone',
-      width: 140,
-    },
-    {
-      title: '角色',
-      dataIndex: 'role',
-      width: 140,
-    },
-    {
-      title: '状态',
-      dataIndex: 'state',
+      title: '更新时间',
+      dataIndex: 'mtime',
+      render: (text) => (text ? moment(text).format('YYYY-MM-DD HH:mm:ss') : ''),
     },
     {
       title: '操作',
       dataIndex: 'option',
       fixed: 'right',
-      width: 160,
+      width: 120,
       render: (text, record) => {
         return (
           <div className={styles.operationList}>
             <a
               onClick={() => {
                 handleModalVisible(true);
-                addForm.setFieldsValue(record);
+                const fieldsValue = { ...record };
+                fieldsValue.permission = JSON.parse(fieldsValue.permission);
+                addForm.setFieldsValue(fieldsValue);
                 setCurrent(record);
               }}
             >
@@ -159,7 +159,7 @@ const RoleList: React.FC = () => {
                   okText: '确认',
                   cancelText: '取消',
                   onOk: async () => {
-                    await delUser({ id: record.id });
+                    await delRole({ id: record.id });
                     changePage(pageNum);
                     message.info('删除成功', 1);
                   },
@@ -181,15 +181,6 @@ const RoleList: React.FC = () => {
           <section className={styles.rowStyle}>
             <Form form={form} name="list-form" onFinish={onFinish}>
               <Row>
-                <Col span={8}>
-                  <Form.Item
-                    name="sysCode"
-                    label="系统"
-                    rules={[{ required: true, message: '必填' }]}
-                  >
-                    <Select style={{ width: '90%' }} options={sysCodeOption} allowClear />
-                  </Form.Item>
-                </Col>
                 <Col span={8}>
                   <Form.Item name="keyword" label="关键字">
                     <Input style={{ width: '90%' }} allowClear />
@@ -223,7 +214,6 @@ const RoleList: React.FC = () => {
               rowKey="id"
               columns={columns}
               dataSource={dataSource}
-              scroll={{ x: 1400 }}
               pagination={{
                 current: pageNum,
                 pageSize,
@@ -249,31 +239,34 @@ const RoleList: React.FC = () => {
               </Form.Item>
             ) : null}
             <Form.Item
-              name="userName"
-              label="用户名"
-              rules={[{ required: true, message: '姓名必填' }]}
+              name="name"
+              label="角色值"
+              rules={[{ required: true, message: '角色值必填' }]}
             >
               <Input style={{ width: '90%' }} allowClear />
             </Form.Item>
             <Form.Item
-              name="password"
-              label="密码"
-              rules={[{ required: true, message: '密码必填' }]}
+              name="nameCn"
+              label="角色名"
+              rules={[{ required: true, message: '角色名必填' }]}
             >
-              <Input type="password" style={{ width: '90%' }} allowClear />
+              <Input style={{ width: '90%' }} allowClear />
+            </Form.Item>
+            <Form.Item name="desc" label="描述" rules={[{ required: true, message: '描述必填' }]}>
+              <Input.TextArea style={{ width: '90%' }} allowClear />
             </Form.Item>
             <Form.Item
-              name="nickName"
-              label="昵称"
-              rules={[{ required: true, message: '昵称必填' }]}
+              name="permission"
+              label="权限"
+              rules={[{ required: true, message: '权限必填' }]}
             >
-              <Input style={{ width: '90%' }} allowClear />
-            </Form.Item>
-            <Form.Item name="email" label="邮箱">
-              <Input style={{ width: '90%' }} allowClear />
-            </Form.Item>
-            <Form.Item name="phone" label="手机">
-              <Input style={{ width: '90%' }} allowClear />
+              <Select mode="multiple" labelInValue style={{ width: '90%' }}>
+                {(authOptionList || []).map((item: any) => (
+                  <Select.Option key={item.name} value={item.name}>
+                    {item.nameCn}
+                  </Select.Option>
+                ))}
+              </Select>
             </Form.Item>
           </Form>
         </Modal>

@@ -20,4 +20,5 @@ export const isAntDesignProOrDev = (): boolean => {
 };
 
 export const tokenName: string = 'chinese-medicine-token';
+export const sysCodeName: string = 'chinese-medicine-sysCode';
 export const userType: number = 1;

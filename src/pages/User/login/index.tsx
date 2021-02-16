@@ -6,7 +6,7 @@ import { useIntl, Link, history, FormattedMessage, SelectLang, useModel } from '
 import Footer from '@/components/Footer';
 import { login } from '@/services/user/login';
 import styles from './index.less';
-import { tokenName } from '@/utils/utils';
+import { sysCodeName, tokenName } from '@/utils/utils';
 
 const LoginMessage: React.FC<{
   content: string;
@@ -38,21 +38,18 @@ const Login: React.FC = () => {
 
   const intl = useIntl();
 
-  /* const fetchUserInfo = async () => {
-    const userInfo = await initialState?.fetchUserInfo?.();
-    if (userInfo) {
-      setInitialState({
-        ...initialState,
-        currentUser: userInfo,
-      });
-    }
-  }; */
-
-  const setToken = (token: string) => {
-    setInitialState({
+  const setInitialData = async (token: string) => {
+    const sysCodeList = await initialState?.getSysCodeList?.();
+    const currentUser = await initialState?.getCurrentInfo?.();
+    const sysInfo = localStorage.getItem(sysCodeName) || '';
+    const newData = {
       ...initialState,
       token,
-    });
+      sysCodeList,
+      currentUser,
+      sysInfo: sysInfo || `${sysCodeList?.[0]?.sysCode},${sysCodeList?.[0]?.sysName}`,
+    };
+    setInitialState(newData);
   };
 
   const handleSubmit = async (values: API.LoginParams) => {
@@ -63,8 +60,7 @@ const Login: React.FC = () => {
       if (result.token) {
         message.success('登录成功！');
         localStorage.setItem(tokenName, result?.token || '');
-        setToken(result?.token || '');
-        // await fetchUserInfo();
+        await setInitialData(result?.token || '');
         goto();
         return;
       }

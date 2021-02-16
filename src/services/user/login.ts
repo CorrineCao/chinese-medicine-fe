@@ -20,3 +20,10 @@ export async function outLogin(options?: Record<string, any>) {
     ...(options || {}),
   });
 }
+
+/** 获取用户 */
+export async function getCurrentUser(options?: Record<string, any>) {
+  return request<any>('/api/user/info', {
+    ...(options || {}),
+  });
+}

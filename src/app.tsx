@@ -7,8 +7,10 @@ import { history } from 'umi';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import type { ResponseError } from 'umi-request';
+import { getSysCode } from '@/services/common';
+import { getCurrentUser } from '@/services/user/login';
 // import { currentUser as queryCurrentUser } from './services/ant-design-pro/api';
-import { tokenName } from './utils/utils';
+import { sysCodeName, tokenName } from './utils/utils';
 
 // const isDev = process.env.NODE_ENV === 'development';
 
@@ -22,34 +24,53 @@ export const initialStateConfig = {
  * */
 export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
-  // currentUser?: API.CurrentUser;
+  sysCodeList?: any[];
   token?: string;
-  // fetchUserInfo?: () => Promise<API.CurrentUser | undefined>;
+  currentUser?: any;
+  sysInfo?: string;
+  getSysCodeList?: () => Promise<any[]>;
+  getCurrentInfo?: () => Promise<any>;
 }> {
-  /* const fetchUserInfo = async () => {
+  const getSysCodeList = async () => {
     try {
-      const currentUser = await queryCurrentUser();
+      const sysCodeResult = await getSysCode();
+      return sysCodeResult;
+    } catch (err) {
+      // console.log('>>error:', error);
+    }
+    return [];
+  };
+  const getCurrentInfo = async () => {
+    try {
+      const currentUser = await getCurrentUser();
       return currentUser;
-    } catch (error) {
-      history.push('/user/login');
+    } catch (err) {
+      // console.log('>>error:', error);
     }
     return undefined;
-  }; */
+  };
+
   // 如果是登录页面，不执行
   if (history.location.pathname !== '/user/login') {
     const token = localStorage.getItem(tokenName);
+    const sysInfo = localStorage.getItem(sysCodeName) || '';
     if (token) {
+      const sysCodeList = await getSysCodeList();
+      const currentUser = await getCurrentInfo();
       return {
-        // fetchUserInfo,
-        // currentUser,
+        getSysCodeList,
+        sysCodeList,
+        sysInfo: sysInfo || `${sysCodeList?.[0]?.sysCode},${sysCodeList?.[0]?.sysName}`,
         token,
+        currentUser,
+        getCurrentInfo,
         settings: {},
       };
     }
-    // const currentUser = await fetchUserInfo();
   }
   return {
-    // fetchUserInfo,
+    getSysCodeList,
+    getCurrentInfo,
     settings: {},
   };
 }
@@ -103,7 +124,7 @@ const codeMessage = {
 const errorHandler = (error: ResponseError) => {
   const { response } = error;
   if (response && response.status) {
-    const errorText = codeMessage[response.status] || response.statusText;
+    const errorText = codeMessage[response.status] || error?.data?.message || response.statusText;
     const { status } = response;
 
     notification.error({

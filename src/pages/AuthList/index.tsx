@@ -90,7 +90,7 @@ const AuthList: React.FC = () => {
       dataIndex: 'name',
     },
     {
-      title: '现实吗',
+      title: '显示名',
       dataIndex: 'nameCn',
     },
     {

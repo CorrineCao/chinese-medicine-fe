@@ -33,3 +33,13 @@ export async function editUser(body: any, options?: Record<string, any>) {
     ...(options || {}),
   });
 }
+
+
+/**  编辑角色 */
+export async function setRole(params: any, options?: Record<string, any>) {
+  return request<any>('/api/user/setRole', {
+    method: 'POST',
+    params: { ...params },
+    ...(options || {}),
+  });
+}

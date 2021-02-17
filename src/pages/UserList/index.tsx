@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
 import { Button, Modal, Select, Row, Col, Form, Table, Input, message } from 'antd';
 import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
-import { userList, addUser, delUser, editUser } from '@/services/user/list';
-import styles from './index.less';
+import { userList, addUser, delUser, editUser, setRole } from '@/services/user/list';
+import { roleList } from '@/services/role/list';
+import { useModel } from 'umi';
 import type { ColumnsType } from 'antd/lib/table/Table';
+import styles from './index.less';
 
 const pageSize: number = 10;
 const typeOptions = [
@@ -20,12 +22,17 @@ const typeOptions = [
 const AuthList: React.FC = () => {
   const [form] = Form.useForm();
   const [addForm] = Form.useForm();
+  const [roleForm] = Form.useForm();
   const [pageNum, setPageNum] = useState<number>(1);
   const [total, setTotal] = useState<number>(1);
   const [dataSource, setDataSource] = useState([]);
   const [current, setCurrent] = useState<any>(null);
+  const [roleOptionList, setRoleOptionList] = useState<any[]>([]);
   /** 弹窗 */
   const [modalVisible, handleModalVisible] = useState<boolean>(false);
+  const [roleModalVisible, handleRoleModalVisible] = useState<boolean>(false);
+  const { initialState } = useModel('@@initialState');
+  const sysCode = initialState?.sysInfo?.split(',')?.[1];
 
   const searchList = async (params: API.PageApiParams) => {
     const result = await userList(params);
@@ -55,11 +62,16 @@ const AuthList: React.FC = () => {
   };
 
   useEffect(() => {
-    const params = {
-      pageSize,
-      pageNum: 1,
+    const initData = async () => {
+      const roleResult = await roleList({ sysCode, pageNum: 1, pageSize: 20 });
+      setRoleOptionList(roleResult.list || []);
+      const params = {
+        pageSize,
+        pageNum: 1,
+      };
+      searchList(params);
     };
-    searchList(params);
+    initData();
   }, []);
 
   const submitModal = () => {
@@ -85,6 +97,24 @@ const AuthList: React.FC = () => {
     addForm.resetFields();
     setCurrent(null);
     handleModalVisible(false);
+  };
+
+  const submitRoleModal = () => {
+    roleForm.validateFields().then(async (values) => {
+      const params = { ...values, sysCode };
+      params.roleIds = JSON.stringify(params.roleIds);
+      await setRole(params);
+      changePage(pageNum);
+      roleForm.resetFields();
+      setCurrent(null);
+      handleRoleModalVisible(false);
+    });
+  };
+
+  const cancelRoleModal = () => {
+    roleForm.resetFields();
+    setCurrent(null);
+    handleRoleModalVisible(false);
   };
 
   const columns: ColumnsType<any> = [
@@ -123,8 +153,9 @@ const AuthList: React.FC = () => {
     },
     {
       title: '角色',
-      dataIndex: 'role',
+      dataIndex: 'roleList',
       width: 140,
+      render:(text) => text ? text.map((item: any)=>item.nameCn).join(','): ''
     },
     {
       title: '状态',
@@ -134,7 +165,7 @@ const AuthList: React.FC = () => {
       title: '操作',
       dataIndex: 'option',
       fixed: 'right',
-      width: 160,
+      width: 180,
       render: (text, record) => {
         return (
           <div className={styles.operationList}>
@@ -164,6 +195,18 @@ const AuthList: React.FC = () => {
               }}
             >
               删除
+            </a>
+            <a
+              onClick={() => {
+                handleRoleModalVisible(true);
+                roleForm.setFieldsValue({
+                  userId: record.id,
+                  roleIds: record.role
+                })
+                setCurrent(record);
+              }}
+            >
+              设置角色
             </a>
           </div>
         );
@@ -267,6 +310,36 @@ const AuthList: React.FC = () => {
             </Form.Item>
             <Form.Item name="phone" label="手机">
               <Input style={{ width: '90%' }} allowClear />
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        <Modal
+          title="设置用户"
+          destroyOnClose
+          visible={roleModalVisible}
+          onOk={submitRoleModal}
+          onCancel={cancelRoleModal}
+        >
+          <Form form={roleForm} name="add-form" initialValues={{}}>
+            <Form.Item
+              name="userId"
+              label="用户ID"
+            >
+              <Input style={{ width: '90%' }} allowClear disabled />
+            </Form.Item>
+            <Form.Item
+              name="roleIds"
+              label="角色"
+              rules={[{ required: true, message: '权限必填' }]}
+            >
+              <Select mode="multiple" style={{ width: '90%' }}>
+                {(roleOptionList || []).map((item: any) => (
+                  <Select.Option key={item.id} value={item.id}>
+                    {item.nameCn}
+                  </Select.Option>
+                ))}
+              </Select>
             </Form.Item>
           </Form>
         </Modal>

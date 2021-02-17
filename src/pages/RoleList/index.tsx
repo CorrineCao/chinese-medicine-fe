@@ -112,15 +112,9 @@ const RoleList: React.FC = () => {
     },
     {
       title: '权限',
-      dataIndex: 'permission',
+      dataIndex: 'permissionList',
       width: '20%',
-      render: (text) => {
-        return text
-          ? JSON.parse(text)
-              .map((item: any) => `${item.label}(${item.value})`)
-              .join(', ')
-          : null;
-      },
+      render:(text) => text ? text.map((item: any)=>item.nameCn).join(','): ''
     },
     {
       title: '描述',
@@ -260,9 +254,9 @@ const RoleList: React.FC = () => {
               label="权限"
               rules={[{ required: true, message: '权限必填' }]}
             >
-              <Select mode="multiple" labelInValue style={{ width: '90%' }}>
+              <Select mode="multiple" style={{ width: '90%' }}>
                 {(authOptionList || []).map((item: any) => (
-                  <Select.Option key={item.name} value={item.name}>
+                  <Select.Option key={item.id} value={item.id}>
                     {item.nameCn}
                   </Select.Option>
                 ))}

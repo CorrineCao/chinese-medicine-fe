@@ -51,7 +51,7 @@ export async function getInitialState(): Promise<{
   };
 
   // 如果是登录页面，不执行
-  if (history.location.pathname !== '/user/login') {
+  if (history.location.pathname !== '/user/loginPage') {
     const token = localStorage.getItem(tokenName);
     const sysInfo = localStorage.getItem(sysCodeName) || '';
     if (token) {
@@ -87,8 +87,8 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
       /* if (!initialState?.currentUser && location.pathname !== '/user/login') {
         history.push('/user/login');
       } */
-      if (!initialState?.token && location.pathname !== '/user/login') {
-        history.push('/user/login');
+      if (!initialState?.token && location.pathname !== '/user/loginPage') {
+        history.push('/user/loginPage');
       }
     },
     links: [],
@@ -156,7 +156,7 @@ const authHeaderInterceptor = (url: string, options: RequestOptionsInit) => {
 const demoResponseInterceptors = (response: Response /* , options: RequestOptionsInit */) => {
   if (response.status === 401) {
     localStorage.removeItem(tokenName);
-    window.location.href = '/user/login';
+    window.location.href = '/user/loginPage';
   }
   return response;
 };

@@ -4,14 +4,8 @@
     layout: false,
     routes: [
       {
-        path: '/user',
-        routes: [
-          {
-            name: 'login',
-            path: '/user/login',
-            component: './User/login',
-          },
-        ],
+        path: '/user/loginPage',
+        component: './User/login',
       },
     ],
   },

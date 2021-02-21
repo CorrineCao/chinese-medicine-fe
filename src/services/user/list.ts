@@ -7,6 +7,7 @@ export async function userList(params: API.PageApiParams, options?: Record<strin
     ...(options || {}),
   });
 }
+
 /**  新增用户 */
 export async function addUser(params: any, options?: Record<string, any>) {
   return request<any>('/api/user/addUser', {
@@ -39,6 +40,14 @@ export async function editUser(body: any, options?: Record<string, any>) {
 export async function setRole(params: any, options?: Record<string, any>) {
   return request<any>('/api/user/setRole', {
     method: 'POST',
+    params: { ...params },
+    ...(options || {}),
+  });
+}
+
+/**  角色列表 */
+export async function allRoleList(params: API.PageApiParams, options?: Record<string, any>) {
+  return request<any>('/api/v1/role/listAll', {
     params: { ...params },
     ...(options || {}),
   });

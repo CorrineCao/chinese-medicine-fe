@@ -34,3 +34,11 @@ export async function editRole(body: any, options?: Record<string, any>) {
     ...(options || {}),
   });
 }
+
+/**  权限列表 */
+export async function allAuthList(params: API.PageApiParams, options?: Record<string, any>) {
+  return request<any>('/api/v1/perm/listAll', {
+    params: { ...params },
+    ...(options || {}),
+  });
+}

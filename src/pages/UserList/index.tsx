@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
 import { Button, Modal, Select, Row, Col, Form, Table, Input, message } from 'antd';
 import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
-import { userList, addUser, delUser, editUser, setRole } from '@/services/user/list';
-import { roleList } from '@/services/role/list';
+import { userList, addUser, delUser, editUser, setRole, allRoleList } from '@/services/user/list';
 import { useModel } from 'umi';
 import type { ColumnsType } from 'antd/lib/table/Table';
 import styles from './index.less';
@@ -63,8 +62,8 @@ const AuthList: React.FC = () => {
 
   useEffect(() => {
     const initData = async () => {
-      const roleResult = await roleList({ sysCode, pageNum: 1, pageSize: 20 });
-      setRoleOptionList(roleResult.list || []);
+      const roleResult = await allRoleList({ sysCode });
+      setRoleOptionList(roleResult || []);
       const params = {
         pageSize,
         pageNum: 1,
@@ -201,7 +200,7 @@ const AuthList: React.FC = () => {
                 handleRoleModalVisible(true);
                 roleForm.setFieldsValue({
                   userId: record.id,
-                  roleIds: record.role
+                  roleIds: JSON.parse(record.role)
                 })
                 setCurrent(record);
               }}

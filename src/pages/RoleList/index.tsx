@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PageContainer } from '@ant-design/pro-layout';
 import { Button, Modal, Select, Row, Col, Form, Table, Input, message } from 'antd';
 import { ExclamationCircleOutlined, PlusOutlined } from '@ant-design/icons';
-import { roleList, addRole, editRole, delRole } from '@/services/role/list';
-import { authList } from '@/services/auth/list';
+import { roleList, addRole, editRole, delRole, allAuthList } from '@/services/role/list';
 import { useModel } from 'umi';
 import type { ColumnsType } from 'antd/lib/table/Table';
 import styles from './index.less';
@@ -57,8 +56,8 @@ const RoleList: React.FC = () => {
 
   useEffect(() => {
     const initData = async () => {
-      const authResult = await authList({ sysCode, pageNum: 1, pageSize: 20 });
-      setAuthOptionList(authResult.list || []);
+      const authResult = await allAuthList({ sysCode });
+      setAuthOptionList(authResult || []);
       const params = {
         pageSize,
         pageNum: 1,

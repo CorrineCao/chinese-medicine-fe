@@ -7,7 +7,7 @@ import { history } from 'umi';
 import RightContent from '@/components/RightContent';
 import Footer from '@/components/Footer';
 import type { ResponseError } from 'umi-request';
-import { getSysCode } from '@/services/common';
+import { getSysCode, getAllPerm } from '@/services/common';
 import { getCurrentUser } from '@/services/user/login';
 // import { currentUser as queryCurrentUser } from './services/ant-design-pro/api';
 import { sysCodeName, tokenName } from './utils/utils';
@@ -28,9 +28,21 @@ export async function getInitialState(): Promise<{
   token?: string;
   currentUser?: any;
   sysInfo?: string;
+  permList?: string[];
   getSysCodeList?: () => Promise<any[]>;
   getCurrentInfo?: () => Promise<any>;
+  getAllPermList?: () => Promise<any[]>;
 }> {
+  const getAllPermList = async () => {
+    try {
+      const permListResult = await getAllPerm();
+      return (permListResult || []).map((item: any) => item.name);
+    } catch (error) {
+      // console.log('>>error:', error);
+    }
+    return [];
+  };
+
   const getSysCodeList = async () => {
     try {
       const sysCodeResult = await getSysCode();
@@ -57,6 +69,7 @@ export async function getInitialState(): Promise<{
     if (token) {
       const sysCodeList = await getSysCodeList();
       const currentUser = await getCurrentInfo();
+      const permList = await getAllPermList();
       return {
         getSysCodeList,
         sysCodeList,
@@ -65,12 +78,15 @@ export async function getInitialState(): Promise<{
         currentUser,
         getCurrentInfo,
         settings: {},
+        permList,
+        getAllPermList,
       };
     }
   }
   return {
     getSysCodeList,
     getCurrentInfo,
+    getAllPermList,
     settings: {},
   };
 }

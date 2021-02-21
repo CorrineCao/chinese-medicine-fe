@@ -7,6 +7,7 @@ import { useModel } from 'umi';
 import type { ColumnsType } from 'antd/lib/table/Table';
 import styles from './index.less';
 import moment from 'moment';
+import { formLayout } from '@/utils/utils';
 
 const pageSize: number = 10;
 
@@ -172,7 +173,7 @@ const RoleList: React.FC = () => {
       <PageContainer>
         <article>
           <section className={styles.rowStyle}>
-            <Form form={form} name="list-form" onFinish={onFinish}>
+            <Form {...formLayout} form={form} name="list-form" onFinish={onFinish}>
               <Row>
                 <Col span={8}>
                   <Form.Item name="keyword" label="关键字">
@@ -219,13 +220,13 @@ const RoleList: React.FC = () => {
         </article>
 
         <Modal
-          title={`${current?.id ? '编辑' : '新增'}用户`}
+          title={`${current?.id ? '编辑' : '新增'}角色`}
           destroyOnClose
           visible={modalVisible}
           onOk={submitModal}
           onCancel={cancelModal}
         >
-          <Form form={addForm} name="add-form" initialValues={{}}>
+          <Form {...formLayout} form={addForm} name="add-form" initialValues={{}}>
             {current?.id ? (
               <Form.Item name="id" label="ID">
                 <Input style={{ width: '90%' }} allowClear disabled />

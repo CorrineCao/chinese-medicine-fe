@@ -7,6 +7,7 @@ import type { ColumnsType } from 'antd/lib/table/Table';
 import { useModel } from 'umi';
 import styles from './index.less';
 import moment from 'moment';
+import { formLayout } from '@/utils/utils';
 
 const pageSize: number = 10;
 
@@ -139,7 +140,7 @@ const AuthList: React.FC = () => {
       <PageContainer>
         <article>
           <section className={styles.rowStyle}>
-            <Form form={form} name="list-form" onFinish={onFinish}>
+            <Form {...formLayout} form={form} name="list-form" onFinish={onFinish}>
               <Row>
                 <Col span={8}>
                   <Form.Item name="keyword" label="关键字">
@@ -185,13 +186,13 @@ const AuthList: React.FC = () => {
         </article>
 
         <Modal
-          title="新增用户"
+          title="新增权限"
           destroyOnClose
           visible={modalVisible}
           onOk={submitModal}
           onCancel={cancelModal}
         >
-          <Form form={addForm} name="add-form" initialValues={{}}>
+          <Form {...formLayout} form={addForm} name="add-form" initialValues={{}}>
             <Form.Item name="name" label="权限名" rules={[{ required: true, message: '名称必填' }]}>
               <Input style={{ width: '90%' }} allowClear />
             </Form.Item>

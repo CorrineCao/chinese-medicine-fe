@@ -13,22 +13,23 @@
     path: '/list',
     name: 'list',
     icon: 'setting',
-    // access: 'canAdmin',
-    // component: './Admin',
     routes: [
       {
         path: '/list/user',
         name: 'user-list',
+        access: 'canUser',
         component: './UserList',
       },
       {
         path: '/list/auth',
         name: 'auth-list',
+        access: 'canAuth',
         component: './AuthList',
       },
       {
         path: '/list/role',
         name: 'role-list',
+        access: 'canRole',
         component: './RoleList',
       },
     ],

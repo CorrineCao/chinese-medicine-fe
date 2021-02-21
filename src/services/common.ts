@@ -5,3 +5,9 @@ export async function getSysCode(options?: Record<string, any>) {
     ...(options || {}),
   });
 }
+
+export async function getAllPerm(options?: Record<string, any>) {
+  return request<any>('/api/v1/perm/myPerm', {
+    ...(options || {}),
+  });
+}

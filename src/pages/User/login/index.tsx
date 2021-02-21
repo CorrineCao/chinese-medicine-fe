@@ -41,6 +41,8 @@ const Login: React.FC = () => {
   const setInitialData = async (token: string) => {
     const sysCodeList = await initialState?.getSysCodeList?.();
     const currentUser = await initialState?.getCurrentInfo?.();
+    const permList = await initialState?.getAllPermList?.();
+
     const sysInfo = localStorage.getItem(sysCodeName) || '';
     const newData = {
       ...initialState,
@@ -48,6 +50,7 @@ const Login: React.FC = () => {
       sysCodeList,
       currentUser,
       sysInfo: sysInfo || `${sysCodeList?.[0]?.sysCode},${sysCodeList?.[0]?.sysName}`,
+      permList,
     };
     setInitialState(newData);
   };

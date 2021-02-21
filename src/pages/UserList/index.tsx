@@ -6,6 +6,7 @@ import { userList, addUser, delUser, editUser, setRole, allRoleList } from '@/se
 import { useModel } from 'umi';
 import type { ColumnsType } from 'antd/lib/table/Table';
 import styles from './index.less';
+import { formLayout } from '@/utils/utils';
 
 const pageSize: number = 10;
 const typeOptions = [
@@ -139,6 +140,10 @@ const AuthList: React.FC = () => {
       title: '用户类型',
       dataIndex: 'type',
       width: 100,
+      render: (text: number) =>
+        text || text === 0
+          ? typeOptions.find((item) => String(item.value) === String(text))?.label
+          : '',
     },
     {
       title: '性别',
@@ -159,6 +164,7 @@ const AuthList: React.FC = () => {
     {
       title: '状态',
       dataIndex: 'state',
+      render: (text: number) => (text === 1 ? '有效' : '无效'),
     },
     {
       title: '操作',
@@ -218,7 +224,7 @@ const AuthList: React.FC = () => {
       <PageContainer>
         <article>
           <section className={styles.rowStyle}>
-            <Form form={form} name="list-form" onFinish={onFinish}>
+            <Form {...formLayout} form={form} name="list-form" onFinish={onFinish}>
               <Row>
                 <Col span={8}>
                   <Form.Item name="type" label="用户类型">
@@ -277,7 +283,7 @@ const AuthList: React.FC = () => {
           onOk={submitModal}
           onCancel={cancelModal}
         >
-          <Form form={addForm} name="add-form" initialValues={{}}>
+          <Form {...formLayout} form={addForm} name="add-form" initialValues={{}}>
             {current?.id ? (
               <Form.Item name="id" label="ID">
                 <Input style={{ width: '90%' }} allowClear disabled />
@@ -298,6 +304,25 @@ const AuthList: React.FC = () => {
               <Input type="password" style={{ width: '90%' }} allowClear />
             </Form.Item>
             <Form.Item
+              name="confirmPassword"
+              label="确认密码"
+              dependencies={['password']}
+              hasFeedback
+              rules={[
+                { required: true, message: '密码必填' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('password') === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('两次密码必须相同'));
+                  },
+                }),
+              ]}
+            >
+              <Input type="password" style={{ width: '90%' }} allowClear />
+            </Form.Item>
+            <Form.Item
               name="nickName"
               label="昵称"
               rules={[{ required: true, message: '昵称必填' }]}
@@ -307,20 +332,20 @@ const AuthList: React.FC = () => {
             <Form.Item name="email" label="邮箱">
               <Input style={{ width: '90%' }} allowClear />
             </Form.Item>
-            <Form.Item name="phone" label="手机">
+            <Form.Item name="phone" label="手机" rules={[{ required: true, message: '手机必填' }]}>
               <Input style={{ width: '90%' }} allowClear />
             </Form.Item>
           </Form>
         </Modal>
 
         <Modal
-          title="设置用户"
+          title="设置角色"
           destroyOnClose
           visible={roleModalVisible}
           onOk={submitRoleModal}
           onCancel={cancelRoleModal}
         >
-          <Form form={roleForm} name="add-form" initialValues={{}}>
+          <Form {...formLayout} form={roleForm} name="add-form" initialValues={{}}>
             <Form.Item name="userId" label="用户ID">
               <Input style={{ width: '90%' }} allowClear disabled />
             </Form.Item>

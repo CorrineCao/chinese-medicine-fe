@@ -154,7 +154,7 @@ const AuthList: React.FC = () => {
       title: '角色',
       dataIndex: 'roleList',
       width: 140,
-      render:(text) => text ? text.map((item: any)=>item.nameCn).join(','): ''
+      render: (text) => (text ? text.map((item: any) => item.nameCn).join(',') : ''),
     },
     {
       title: '状态',
@@ -200,8 +200,8 @@ const AuthList: React.FC = () => {
                 handleRoleModalVisible(true);
                 roleForm.setFieldsValue({
                   userId: record.id,
-                  roleIds: JSON.parse(record.role)
-                })
+                  roleIds: JSON.parse(record.role),
+                });
                 setCurrent(record);
               }}
             >
@@ -321,10 +321,7 @@ const AuthList: React.FC = () => {
           onCancel={cancelRoleModal}
         >
           <Form form={roleForm} name="add-form" initialValues={{}}>
-            <Form.Item
-              name="userId"
-              label="用户ID"
-            >
+            <Form.Item name="userId" label="用户ID">
               <Input style={{ width: '90%' }} allowClear disabled />
             </Form.Item>
             <Form.Item

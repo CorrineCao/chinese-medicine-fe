@@ -113,7 +113,7 @@ const RoleList: React.FC = () => {
       title: '权限',
       dataIndex: 'permissionList',
       width: '20%',
-      render:(text) => text ? text.map((item: any)=>item.nameCn).join(','): ''
+      render: (text) => (text ? text.map((item: any) => item.nameCn).join(',') : ''),
     },
     {
       title: '描述',
